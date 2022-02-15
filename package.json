@@ -1,0 +1,19 @@
+{
+  "name": "hhh-backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "hhhBackendServer.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Prem Sagar",
+  "license": "ISC",
+  "dependencies": {
+    "bcrypt": "^5.0.1",
+    "dotenv": "^16.0.0",
+    "express": "^4.17.2",
+    "lodash": "^4.17.21",
+    "mongoose": "^6.2.1",
+    "nodemon": "^2.0.15"
+  }
+}
