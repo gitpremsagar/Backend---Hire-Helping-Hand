@@ -1,18 +1,18 @@
 require("dotenv").config();
 const express = require("express");
+const cors = require("cors");
 
 //importing all route handlers
-const loginRouteHandler = require("./routes/loginRouteHandler.js");
-const signupRouteHandler = require("./routes/signupRouteHandler.js");
+const users = require("./routes/users.js");
 
 const app = express();
 
 app.use("/public", express.static("public"));
 app.use(express.json());
+app.use(cors());
 
 //assigning route handlers to the routes
-app.use("/api/login", loginRouteHandler);
-app.use("/api/signup", signupRouteHandler);
+app.use("/api/users", users);
 
 //listening
 const portNumberOnLocalHost = process.env.LISTENING_PORT_OF_HHH_BACKEND_SERVER;
