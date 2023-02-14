@@ -2,10 +2,8 @@ require("dotenv").config();
 const express = require("express");
 const route = express.Router();
 const { checkSchema, validationResult } = require("express-validator");
-const bcrypt = require("bcrypt");
+
 const makeQueryToDatabase = require("../src/queryDB");
-const jwt = require("jsonwebtoken");
-const nodemailer = require("nodemailer");
 
 //shecema to validate user posted data against set schema while siging up an user
 const newUserSchema = {
@@ -101,97 +99,42 @@ route.post("/", checkSchema(newUserSchema), async (req, res) => {
   const selectStatementForGivenEmail = `SELECT ${process.env.TABLE_NAME_OF_USERS}.*
   FROM ${process.env.TABLE_NAME_OF_USERS}
   WHERE ${process.env.TABLE_NAME_OF_USERS}.email = ? LIMIT 1;`;
+
+  const selectQueryResponse = await makeQueryToDatabase(
+    process.env.MYSQL_DB_NAME,
+    selectStatementForGivenEmail,
+    [req.body.email]
+  );
+
+  if (selectQueryResponse[0][0]) {
+    res.status(400).send("AlreadyRegistered");
+    return;
+  }
+
+  //========== register user ===========
+  const { firstname, lastname, email, password } = req.body;
+  const userIP = req.ip;
+  const currentTimestamp = Math.round(+new Date() / 1000);
+
+  //==== hashing password ====
+  const salt = await bcrypt.genSalt(10);
+  const hashedPassword = await bcrypt.hash(password, salt);
+
+  //-------- Inserting new user data into database --------
   try {
-    const selectQueryResponse = await makeQueryToDatabase(
-      process.env.MYSQL_DB_NAME,
-      selectStatementForGivenEmail,
-      [req.body.email]
-    );
-
-    //check if this user is already registered or not
-    if (selectQueryResponse[0][0]) {
-      res.status(400).send("AlreadyRegistered");
-      return;
-    }
-
-    //========== register this new user ===========
-    const { firstname, lastname, email, password } = req.body;
-    const userIP = req.ip;
-    const currentTimestamp = Math.round(+new Date() / 1000);
-
-    //==== hashing password ====
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-
-    //------generate verification__details to be inserted in the query----------
-    const generateVerificationCode = () => {
-      // generates a random 4-digit code
-      return Math.floor(1000 + Math.random() * 9000);
-    };
-    const verificationCode = generateVerificationCode();
-    const verificationDetails = {
-      isEmailVerified: false,
-      emailVerificationCode: verificationCode,
-    };
-    const verificationDetailsString = JSON.stringify(verificationDetails);
-
-    //-------- Inserting new user data into database --------
     const insertStatementToRegisterUser =
       "INSERT INTO `" +
       process.env.MYSQL_DB_NAME +
       "`.`" +
       process.env.TABLE_NAME_OF_USERS +
-      "` (`first_name`, `last_name`, `email`, `password`, `signup_date`, `signup_ip`, `profile_pic_name`, `last_seen`, `user_type`, `phone_no`, `user_name`,`verification_details`) VALUES (?, ?, ?, ?, ?, ?, '', '', 'user', '', '',?);";
+      "` (`first_name`, `last_name`, `email`, `password`, `signup_date`, `signup_ip`, `profile_pic_name`, `last_seen`, `user_type`, `phone_no`, `user_name`) VALUES (?, ?, ?, ?, ?, ?, '', '', 'user', '', '');";
 
     const insertQueryResponse = await makeQueryToDatabase(
       process.env.MYSQL_DB_NAME,
       insertStatementToRegisterUser,
-      [
-        firstname,
-        lastname,
-        email,
-        hashedPassword,
-        currentTimestamp,
-        userIP,
-        verificationDetailsString,
-      ]
+      [firstname, lastname, email, hashedPassword, currentTimestamp, userIP]
     );
     console.log("Insert query ran.");
-
-    // TODO: ----------2. send verification code to the email of new user----------
-    const sendVerificationCode = async (email) => {
-      try {
-        // create a transporter using nodemailer
-        let transporter = nodemailer.createTransport({
-          // FIXME: replace all values with env variables
-          host: "smtp.ethereal.email",
-          port: 587,
-          secure: false,
-          auth: {
-            user: "jalon.johnson@ethereal.email",
-            pass: "htQv44gr32sfDrpYD3",
-          },
-        });
-
-        // send email with the generated verification code
-        let info = await transporter.sendMail({
-          // FIXME:change email address and store it to envVars
-          from: '"Your Name" <psagar172@gmail.com>',
-          to: email,
-          subject: "Verification Code",
-          text: `Your verification code is: ${verificationCode}`,
-          html: `<p>Your verification code is: <strong>${verificationCode}</strong></p>`,
-        });
-
-        console.log("Message sent: %s", info.messageId);
-        console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
-      } catch (err) {
-        console.error("Email not sent!");
-        console.error(err);
-      }
-    };
-    sendVerificationCode(email);
-
     res.status(200).send(insertQueryResponse);
   } catch (error) {
     console.log("error in running query = ", error);
@@ -212,11 +155,11 @@ route.post("/login", checkSchema(loginUserSchema), async (req, res) => {
   const dbName = process.env.MYSQL_DB_NAME;
   const usersTable = process.env.TABLE_NAME_OF_USERS;
   const selectStatement = `SELECT ${usersTable}.* FROM ${usersTable} WHERE ${usersTable}.email = ? LIMIT 1;`;
-  const queryResponse = await makeQueryToDatabase(dbName, selectStatement, [
-    email,
-  ]);
 
   try {
+    const queryResponse = await makeQueryToDatabase(dbName, selectStatement, [
+      email,
+    ]);
     // check if user with this email exists
     if (!queryResponse[0][0]) return res.status(400).send("emailPasswordWrong");
 
@@ -227,22 +170,11 @@ route.post("/login", checkSchema(loginUserSchema), async (req, res) => {
     );
     if (!validPassword) return res.status(400).send("passwordEmailWrong");
 
-    //create JWT token
-    const token = jwt.sign(
-      {
-        idusers: queryResponse[0][0].idusers,
-        first_name: queryResponse[0][0].first_name,
-        last_name: queryResponse[0][0].last_name,
-      },
-      process.env.JWT_PRIVATE_KEY
-    );
-
-    //TODO: update last seen and last login ip status in database
-
-    //TODO: if rMe is true then remember this user on this device so that she doesn't need to login again and again
-
     //since there's no error upto this point so send response with token
-    res.header("x-auth-token", token).status(200).send("loggedIn");
+    res
+      .header("x-auth-token", token)
+      .status(200)
+      .send("here send the correct response");
   } catch (error) {
     console.log("the error is ", error);
     res.status(500).send("Problem in server!");
