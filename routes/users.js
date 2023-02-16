@@ -6,6 +6,14 @@ const bcrypt = require("bcrypt");
 const makeQueryToDatabase = require("../src/queryDB");
 const jwt = require("jsonwebtoken");
 const nodemailer = require("nodemailer");
+const {
+  getVerificationEmailHTML,
+  getVerificationEmailPlainText,
+} = require("../src/modules/users/generateVerificationEmail");
+const {
+  suspiciousSignupNotifyingLink,
+} = require("../src/modules/envVariables/envVariables");
+const crypto = require("crypto");
 
 //shecema to validate user posted data against set schema while siging up an user
 const newUserSchema = {
@@ -125,15 +133,21 @@ route.post("/", checkSchema(newUserSchema), async (req, res) => {
 
     //------generate verification__details to be inserted in the query----------
     const generateVerificationCode = () => {
-      // generates a random 4-digit code
+      // generates a random 4-digit code to email to the signing up user
       return Math.floor(1000 + Math.random() * 9000);
     };
     const verificationCode = generateVerificationCode();
+
+    // creating verification details in json format to store it to database
     const verificationDetails = {
       isEmailVerified: false,
       emailVerificationCode: verificationCode,
     };
     const verificationDetailsString = JSON.stringify(verificationDetails);
+
+    // ------ to detect spam sign up -----------
+    const spamSignupDetectionToken = crypto.randomBytes(32).toString("hex"); // generate spam detection token
+    const spamSignupNotifyingLink = `${suspiciousSignupNotifyingLink}?spamSignupDetectionToken=${spamSignupDetectionToken}`;
 
     //-------- Inserting new user data into database --------
     const insertStatementToRegisterUser =
@@ -141,7 +155,7 @@ route.post("/", checkSchema(newUserSchema), async (req, res) => {
       process.env.MYSQL_DB_NAME +
       "`.`" +
       process.env.TABLE_NAME_OF_USERS +
-      "` (`first_name`, `last_name`, `email`, `password`, `signup_date`, `signup_ip`, `profile_pic_name`, `last_seen`, `user_type`, `phone_no`, `user_name`,`verification_details`) VALUES (?, ?, ?, ?, ?, ?, '', '', 'user', '', '',?);";
+      "` (`first_name`, `last_name`, `email`, `password`, `signup_date`, `signup_ip`, `profile_pic_name`, `last_seen`, `user_type`, `phone_no`, `user_name`,`verification_details`,`spam_signup_detection_token`) VALUES (?, ?, ?, ?, ?, ?, '', '', 'user', '', '',?,?);";
 
     const insertQueryResponse = await makeQueryToDatabase(
       process.env.MYSQL_DB_NAME,
@@ -154,33 +168,45 @@ route.post("/", checkSchema(newUserSchema), async (req, res) => {
         currentTimestamp,
         userIP,
         verificationDetailsString,
+        spamSignupDetectionToken,
       ]
     );
     console.log("Insert query ran.");
 
-    // TODO: ----------2. send verification code to the email of new user----------
     const sendVerificationCode = async (email) => {
       try {
+        const smtpSecure = process.env.SMTP_SECURE === "true"; // Parse 'true' or 'false' string into boolean value
         // create a transporter using nodemailer
         let transporter = nodemailer.createTransport({
-          // FIXME: replace all values with env variables
-          host: "smtp.ethereal.email",
-          port: 587,
-          secure: false,
+          host: process.env.SMTP_HOSTNAME,
+          port: process.env.SMTP_PORT,
+          secure: smtpSecure,
           auth: {
-            user: "jalon.johnson@ethereal.email",
-            pass: "htQv44gr32sfDrpYD3",
+            user: process.env.SMTP_USERNAME,
+            pass: process.env.SMTP_PASSWORD,
           },
         });
 
         // send email with the generated verification code
+
+        const smtpFromName = process.env.SMTP_FROM_NAME; // to make sure to include the quotation marks around white space
+
+        const verificationEmailPlainText = getVerificationEmailPlainText(
+          firstname,
+          verificationCode,
+          spamSignupNotifyingLink
+        );
+        const verificationEmailHTML = getVerificationEmailHTML(
+          firstname,
+          verificationCode,
+          spamSignupNotifyingLink
+        );
         let info = await transporter.sendMail({
-          // FIXME:change email address and store it to envVars
-          from: '"Your Name" <psagar172@gmail.com>',
+          from: `"${smtpFromName}" <${process.env.SMTP_FROM_EMAIL}>`,
           to: email,
-          subject: "Verification Code",
-          text: `Your verification code is: ${verificationCode}`,
-          html: `<p>Your verification code is: <strong>${verificationCode}</strong></p>`,
+          subject: "Please verify your email to complete registration!",
+          text: verificationEmailPlainText,
+          html: verificationEmailHTML,
         });
 
         console.log("Message sent: %s", info.messageId);
@@ -250,3 +276,5 @@ route.post("/login", checkSchema(loginUserSchema), async (req, res) => {
 });
 
 module.exports = route;
+
+// TODO: comment out all console logs
