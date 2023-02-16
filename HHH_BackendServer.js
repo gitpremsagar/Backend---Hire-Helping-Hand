@@ -5,6 +5,7 @@ const cors = require("cors");
 //importing all route handlers
 const users = require("./routes/users.js");
 const decodeToken = require("./routes/decodeToken.js");
+const reportSpamSignup = require("./routes/reportSpamSignup.js");
 
 const app = express();
 
@@ -15,7 +16,8 @@ const corsOptions = { exposedHeaders: "x-auth-token" };
 app.use(cors(corsOptions));
 
 //assigning route handlers to the routes
-app.use("/api/users", users);
+app.use("/api/users", users); //handles user sign up and login
+app.use("/api/report-spam-signup", reportSpamSignup);
 app.use("/api/authenticate", decodeToken);
 
 //listening
