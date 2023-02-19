@@ -6,6 +6,8 @@ const cors = require("cors");
 const users = require("./routes/users.js");
 const decodeToken = require("./routes/decodeToken.js");
 const reportSpamSignup = require("./routes/reportSpamSignup.js");
+const verifyEmail = require("./routes/verifyEmail.js");
+const handleSearch = require("./routes/handleSearch.js");
 
 const app = express();
 
@@ -19,6 +21,8 @@ app.use(cors(corsOptions));
 app.use("/api/users", users); //handles user sign up and login
 app.use("/api/report-spam-signup", reportSpamSignup);
 app.use("/api/authenticate", decodeToken);
+app.use("/api/verify/email", verifyEmail);
+app.use("/api/search", handleSearch);
 
 //listening
 const portNumberOnLocalHost = process.env.LISTENING_PORT_OF_HHH_BACKEND_SERVER;
