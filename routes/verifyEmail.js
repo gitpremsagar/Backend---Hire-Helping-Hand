@@ -25,6 +25,7 @@ router.post("/", async (req, res) => {
     const emailVerificationCode =
       results[0].verification_details.emailVerificationCode;
     if (emailVerificationCode == code) {
+      // TODO: Update the user's is_email_verified flag in the database
       console.log(emailVerificationCode, " = ", code);
       // Update the user's email_verified flag in the database
       // await makeQueryToDatabase(
@@ -45,3 +46,5 @@ router.post("/", async (req, res) => {
 });
 
 module.exports = router;
+
+// TODO: remove all console logs
