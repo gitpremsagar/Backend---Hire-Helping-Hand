@@ -3,112 +3,108 @@ const express = require("express");
 const router = express.Router();
 const makeQueryToDatabase = require("../src/queryDB");
 
-const dummyFreelancers = [
-  {
-    proposal_title: "Professional Web Development",
-    description:
-      "I can build you a professional website with modern web development technologies.",
-    freelancer_name: "John Doe",
-    freelancer_location: "New York",
-    tags: ["web development", "frontend", "backend", "javascript"],
-  },
-  {
-    proposal_title: "E-commerce Store Development",
-    description:
-      "I can create a fully functional e-commerce store for your business needs.",
-    freelancer_name: "Jane Doe",
-    freelancer_location: "Los Angeles",
-    tags: ["e-commerce", "web design", "react", "node.js"],
-  },
-  {
-    proposal_title: "Mobile App Development",
-    description:
-      "I can create mobile applications for both Android and iOS platforms.",
-    freelancer_name: "Bob Smith",
-    freelancer_location: "San Francisco",
-    tags: ["mobile app", "react native", "swift", "java"],
-  },
-  {
-    proposal_title: "SEO Optimization",
-    description:
-      "I can optimize your website for search engines and increase its visibility.",
-    freelancer_name: "Alice Johnson",
-    freelancer_location: "Chicago",
-    tags: ["SEO", "digital marketing", "google analytics", "content marketing"],
-  },
-  {
-    proposal_title: "Data Analysis and Visualization",
-    description:
-      "I can help you analyze and visualize your data using the latest tools and techniques.",
-    freelancer_name: "Mark Wilson",
-    freelancer_location: "Boston",
-    tags: ["data analysis", "visualization", "python", "machine learning"],
-  },
-  {
-    proposal_title: "Graphic Design Services",
-    description:
-      "I can provide you with high-quality graphic design services for your branding needs.",
-    freelancer_name: "Emily Brown",
-    freelancer_location: "Miami",
-    tags: ["graphic design", "logo design", "branding", "illustration"],
-  },
-  {
-    proposal_title: "Social Media Marketing",
-    description:
-      "I can help you increase your brand awareness and engagement on social media platforms.",
-    freelancer_name: "David Lee",
-    freelancer_location: "Seattle",
-    tags: ["social media", "marketing", "content creation", "analytics"],
-  },
-  {
-    proposal_title: "UI/UX Design",
-    description:
-      "I can design user interfaces and experiences for your web and mobile applications.",
-    freelancer_name: "Sarah Kim",
-    freelancer_location: "Houston",
-    tags: ["UI", "UX", "web design", "mobile design"],
-  },
-  {
-    proposal_title: "Content Writing Services",
-    description:
-      "I can provide you with high-quality content writing services for your business needs.",
-    freelancer_name: "Karen Chen",
-    freelancer_location: "Dallas",
-    tags: ["content writing", "copywriting", "blogging", "SEO"],
-  },
-  {
-    proposal_title: "Video Editing and Production",
-    description:
-      "I can help you produce and edit professional videos for your business or personal use.",
-    freelancer_name: "Tom Lee",
-    freelancer_location: "Atlanta",
-    tags: ["video editing", "production", "adobe premiere", "after effects"],
-  },
-];
-
 //  ------------- handle search request ---------------
-router.get("/", (req, res) => {
-  const { q, searchLocation, searchServiceType } = req.body;
+router.get("/", async (req, res) => {
+  // if there is no search term in the url then send 400 status
+  if (!req.query.q)
+    return res.status(400).json({ message: "no search term provided" });
+  // Get search query and location from request query parameters
+  const q = req.query.q || "";
+  const searchLocation = req.query.searchLocation || "";
+  const searchServiceType = req.query.searchServiceType || "";
 
-  // build mysql query
-  let query = `SELECT * FROM proposals WHERE title LIKE '%${q}%'`;
-  if (searchLocation !== "") {
-    query += ` AND freelancer_location = '${searchLocation}'`;
+  // Build SQL query to search for proposals
+  let sql = `SELECT * FROM ${process.env.MYSQL_DB_NAME}.proposals WHERE title LIKE ? OR tags LIKE ? OR description LIKE ?  OR sub_category LIKE ? OR freelancer_location LIKE ?`;
+  let params = [];
+  params.push(`%${q}%`, `%${q}%`, `%${q}%`, `%${q}%`, `%${q}%`);
+
+  //   // following is the second version of sql statement
+  //   const sql = `
+  //   SELECT *
+  //   FROM proposals
+  //   WHERE (title LIKE CONCAT('%', ?, '%') OR tags LIKE CONCAT('%', ?, '%') OR category LIKE CONCAT('%', ?, '%'))
+  //     OR freelancer_location LIKE CONCAT('%', ?, '%')
+  //     OR sub_category = ?
+  //   ORDER BY (
+  //     CASE
+  //       WHEN title LIKE CONCAT('%', ?, '%') THEN 10
+  //       WHEN title LIKE CONCAT('%', ?, '%') THEN 5
+  //       ELSE 1
+  //     END
+  //   ) DESC,
+  //   number_of_appearance_in_search DESC,
+  //   average_rating DESC
+  //   LIMIT ?
+  // `;
+  //   const params = [
+  //     q ?? "",
+  //     q ?? "",
+  //     q ?? "",
+  //     searchLocation ?? "",
+  //     searchServiceType ?? "",
+  //     q ?? "",
+  //     q ?? "",
+  //     "5",
+  //   ];
+
+  // console.log(sql);
+  // console.log(params);
+
+  try {
+    const selectQueryResponse = await makeQueryToDatabase(
+      process.env.MYSQL_DB_NAME,
+      sql,
+      params
+    );
+
+    console.log(selectQueryResponse[0]);
+
+    // Calculate relevance score for each result based on search term
+    selectQueryResponse[0].forEach((result) => {
+      // Initialize relevance score to 0
+      let relevanceScore = 0;
+
+      // Count number of times search term appears in title
+      console.log(q);
+      const titleMatchCount = (result.title.match(new RegExp(q, "gi")) || [])
+        .length;
+      relevanceScore += titleMatchCount * 5;
+
+      // Count number of times search term appears in description
+      const descriptionMatchCount = (
+        result.tags.match(new RegExp(q, "gi")) || []
+      ).length;
+      relevanceScore += descriptionMatchCount * 4;
+
+      // Count number of times search term appears in sub_category
+      const sub_categoryCount = (result.tags.match(new RegExp(q, "gi")) || [])
+        .length;
+      relevanceScore += sub_categoryCount * 3;
+
+      // Count number of times search term appears in tags
+      const tagsMatchCount = (result.tags.match(new RegExp(q, "gi")) || [])
+        .length;
+      relevanceScore += tagsMatchCount * 2;
+
+      // Count number of times search term appears in tags
+      const freelancer_locationCount = (
+        result.tags.match(new RegExp(q, "gi")) || []
+      ).length;
+      relevanceScore += freelancer_locationCount;
+
+      // Set relevance score for result
+      result.relevanceScore = relevanceScore;
+    });
+
+    // Sort selectQueryResponse by relevance score in descending order
+    selectQueryResponse[0].sort((a, b) => b.relevanceScore - a.relevanceScore);
+
+    // Send search selectQueryResponse back to client
+    res.json(selectQueryResponse[0]);
+  } catch (error) {
+    console.log("error in running query = ", error);
+    res.status(500).send("Internal server error");
   }
-  if (searchServiceType !== "") {
-    query += ` AND service_type = '${searchServiceType}'`;
-  }
-
-  // execute mysql query
-  // connection.query(query, (err, results) => {
-  //   if (err) {
-  //     console.log("Error executing mysql query: " + err.stack);
-  //     return res.status(500).json({ message: "Internal server error" });
-  //   }
-
-  //   // send response with search results
-  //   return res.status(200).json({ results });
-  // });
 });
 
 //------------ handle suggsetions request ----------
