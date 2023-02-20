@@ -119,7 +119,7 @@ router.get("/suggestions", async (req, res) => {
   if (!q)
     return res.status(400).json({ error: "Did not find any search term!" });
 
-  console.log("params = ", q, searchLocation, searchServiceType);
+  // console.log("params = ", q, searchLocation, searchServiceType);
 
   // build mysql query
   // let query = `SELECT tags FROM ${process.env.MYSQL_DB_NAME}.proposals WHERE title LIKE CONCAT('%', ?, '%') OR tags LIKE CONCAT('%', ?, '%')`;
@@ -133,14 +133,13 @@ router.get("/suggestions", async (req, res) => {
   //   queryParams.push(searchLocation);
   // }
 
-  let sql = `SELECT tags FROM ${process.env.MYSQL_DB_NAME}.proposals`;
+  // build mysql query
+  let sql = `SELECT title FROM ${process.env.MYSQL_DB_NAME}.proposals`;
   let params = [];
-
   if (req.query.q) {
     sql += " WHERE (title LIKE ? OR tags LIKE ? OR category LIKE ?)";
     params.push(`%${req.query.q}%`, `%${req.query.q}%`, `%${req.query.q}%`);
   }
-
   if (req.query.searchServiceType) {
     if (params.length > 0) {
       sql += " AND category = ?";
@@ -149,7 +148,6 @@ router.get("/suggestions", async (req, res) => {
     }
     params.push(req.query.searchServiceType);
   }
-
   if (req.query.searchLocation) {
     if (params.length > 0) {
       sql += " AND freelancer_location = ?";
@@ -159,10 +157,8 @@ router.get("/suggestions", async (req, res) => {
     params.push(req.query.searchLocation);
   }
 
-  // Now you can execute the query using `sql` and `params`
-  console.log("query = ", sql);
-  console.log("queryParams = ", params);
-  // let query = `SELECT * FROM ${process.env.MYSQL_DB_NAME}.proposals;`;//dummy query
+  // console.log("query = ", sql);
+  // console.log("queryParams = ", params);
 
   // searche through database for relevant content and return a list of potential matches to the search query
   try {
@@ -172,8 +168,24 @@ router.get("/suggestions", async (req, res) => {
       params
     );
 
-    // send query response to frontend
-    return res.send(selectQueryResponse);
+    // extract the title field from the selectQueryResponse and send them back to the client
+    console.log(selectQueryResponse);
+    const titles = selectQueryResponse[0].map((result) => result.title); //creating new arrat containing only `tags`
+
+    // separate each tag and asign it to a new array
+    const suggestions = titles
+      .flatMap((tag) => tag.split(", "))
+      .reduce((acc, curr) => {
+        const existing = acc.find((item) => item.title === curr);
+        if (existing) {
+          existing.count += 1;
+        } else {
+          acc.push({ title: curr, count: 1 });
+        }
+        return acc;
+      }, [])
+      .sort((a, b) => b.count - a.count);
+    return res.send(suggestions);
   } catch (error) {
     console.log("error in running query = ", error);
     res.status(500).send("Internal server error");
