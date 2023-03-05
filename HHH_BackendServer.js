@@ -7,7 +7,8 @@ const users = require("./routes/users.js");
 const decodeToken = require("./routes/decodeToken.js");
 const reportSpamSignup = require("./routes/reportSpamSignup.js");
 const verifyEmail = require("./routes/verifyEmail.js");
-const handleSearch = require("./routes/handleSearch.js");
+const handleSearchForProposals = require("./routes/handleSearchForProposals.js");
+const handleSearchForProjects = require("./routes/handleSearchForProjects.js");
 const proposals = require("./routes/proposals.js");
 const projects = require("./routes/projects.js");
 
@@ -24,7 +25,8 @@ app.use("/api/users", users); //handles user sign up and login
 app.use("/api/report-spam-signup", reportSpamSignup);
 app.use("/api/authenticate", decodeToken);
 app.use("/api/verify/email", verifyEmail);
-app.use("/api/search", handleSearch);
+app.use("/api/search/proposals", handleSearchForProposals);
+app.use("/api/search/projects", handleSearchForProjects);
 app.use("/api/proposals", proposals);
 app.use("/api/projects", projects);
 
