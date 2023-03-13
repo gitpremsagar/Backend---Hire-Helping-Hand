@@ -11,6 +11,7 @@ const handleSearchForProposals = require("./routes/handleSearchForProposals.js")
 const handleSearchForProjects = require("./routes/handleSearchForProjects.js");
 const proposals = require("./routes/proposals.js");
 const projects = require("./routes/projects.js");
+const avatarUploadHandler = require("./routes/avatarUploadHandler.js");
 
 const app = express();
 
@@ -29,6 +30,7 @@ app.use("/api/search/proposals", handleSearchForProposals);
 app.use("/api/search/projects", handleSearchForProjects);
 app.use("/api/proposals", proposals);
 app.use("/api/projects", projects);
+app.use("/api/upload-avatar", avatarUploadHandler);
 
 //listening
 const portNumberOnLocalHost = process.env.LISTENING_PORT_OF_HHH_BACKEND_SERVER;

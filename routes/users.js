@@ -14,6 +14,7 @@ const {
   suspiciousSignupNotifyingLink,
 } = require("../src/modules/envVariables/envVariables");
 const crypto = require("crypto");
+const auth = require("../middlewares/auth");
 
 //shecema to validate user posted data against set schema while siging up an user
 const newUserSchema = {
@@ -273,6 +274,34 @@ route.post("/login", checkSchema(loginUserSchema), async (req, res) => {
     console.log("the error is ", error);
     res.status(500).send("Problem in server!");
   }
+});
+
+// ========= Route for GETTING user information ========
+route.get("/:idusers", async (req, res) => {
+  // extracting idusers from url
+  const userIdOnURL = req.params.idusers;
+  try {
+    // getting user info from database with given idusers
+    // FIXME: select only required colomns
+    let sql = `select * from ${process.env.MYSQL_DB_NAME}.users WHERE idusers = ?`;
+    const response = await makeQueryToDatabase(process.env.MYSQL_DB_NAME, sql, [
+      userIdOnURL,
+    ]);
+
+    console.log("query response on api/users/:idusers", response[0]);
+    // sending all the informations available
+    res.send(response[0]);
+  } catch (error) {
+    console.log("Error in making query = ", error);
+    res.status(500).json({ error: "error in executing query!" });
+  }
+});
+
+// ========= Route for UPDATING user information ========
+route.put("/:idusers", auth, (req, res) => {
+  //if provided token is invalid then send 400 status code
+  if (req.user === "invalidToken") res.status(400).send("invalidToken");
+  res.json({ iduser: req.params.idusers, "req.user": req.user });
 });
 
 module.exports = route;
