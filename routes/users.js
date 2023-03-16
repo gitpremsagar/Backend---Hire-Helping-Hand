@@ -91,6 +91,7 @@ const loginUserSchema = {
 
 //========= handling all post requests  ===========
 
+// CREATE
 //====== Route for signing up user =======
 route.post("/", checkSchema(newUserSchema), async (req, res) => {
   //-------------- Validating user input ------------
@@ -276,6 +277,7 @@ route.post("/login", checkSchema(loginUserSchema), async (req, res) => {
   }
 });
 
+// READ
 // ========= Route for GETTING user information ========
 route.get("/:idusers", async (req, res) => {
   // extracting idusers from url
@@ -297,12 +299,17 @@ route.get("/:idusers", async (req, res) => {
   }
 });
 
+// UPDATE
 // ========= Route for UPDATING user information ========
 route.put("/:idusers", auth, (req, res) => {
   //if provided token is invalid then send 400 status code
-  if (req.user === "invalidToken") res.status(400).send("invalidToken");
+  if (req.user === "invalidToken") return res.status(400).send("invalidToken");
+
   res.json({ iduser: req.params.idusers, "req.user": req.user });
 });
+
+// DELETE
+// TODO: code route to handle user removal request
 
 module.exports = route;
 
