@@ -40,7 +40,9 @@ router.post(
     //cross check if user is logged in and is requesting to change her own profile
     // if the user is not logged in or provided invalid jwt then dont allow her to upload profile pic
     if (req.user == "notLoggedIn" || req.user == "invalidToken") {
-      return res.status(401).json({ error: "You are not authorized!" });
+      return res
+        .status(401)
+        .json({ error: "You are not authorized!", "req.user": req.user });
     }
 
     // don't allow user to change someone else's profile pic
@@ -85,8 +87,8 @@ router.post(
       }
 
       // TODO: UPDATE freelancer profile image link colomn on database
-      const imageUrl = `/uploads/freelancerProfileImages/${req.file.filename}`; //FIXME: give custom name to uploaded file
-      res.send(imageUrl);
+      const imageName = `${req.file.filename}`; //FIXME: give custom name to uploaded file
+      res.send(imageName);
     } catch (error) {
       // console.error("Failed to upload avatar:", error);
       console.log("Failed to upload avatar:", error);

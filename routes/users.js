@@ -290,7 +290,6 @@ route.get("/:idusers", async (req, res) => {
       userIdOnURL,
     ]);
 
-    console.log("query response on api/users/:idusers", response[0]);
     // sending all the informations available
     res.send(response[0]);
   } catch (error) {
