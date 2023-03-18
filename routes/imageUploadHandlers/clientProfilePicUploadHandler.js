@@ -35,12 +35,6 @@ const upload = multer({
 
 // define function to update `profile_pic_as_client` colomn in `users` table //FIXME: complete the code of this function
 async function updateProfilePicAsClientColoumnInDatabase(imageName, userID) {
-  console.log(
-    "Updating db with image name = ",
-    imageName,
-    " and userID = ",
-    userID
-  );
   const sqlStatement =
     "UPDATE `" +
     process.env.MYSQL_DB_NAME +

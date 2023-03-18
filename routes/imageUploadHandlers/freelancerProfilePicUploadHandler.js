@@ -1,6 +1,7 @@
 const express = require("express");
 const multer = require("multer");
 const auth = require("../../middlewares/auth");
+const makeQueryToDatabase = require("../../src/queryDB");
 
 const router = express.Router();
 
@@ -31,6 +32,45 @@ const upload = multer({
   },
   fileFilter: fileFilter,
 });
+
+// define function to update `profile_pic_as_freelancer` colomn in `users` table //FIXME: complete the code of this function
+async function updateProfilePicAsFreelancerColoumnInDatabase(
+  imageName,
+  userID
+) {
+  const sqlStatement =
+    "UPDATE `" +
+    process.env.MYSQL_DB_NAME +
+    "`.`users` SET `profile_pic_as_freelancer` = ? WHERE (`idusers` = ?);";
+  // execute the query
+  try {
+    const queryExuectionResponse = await makeQueryToDatabase(
+      process.env.MYSQL_DB_NAME,
+      sqlStatement,
+      [imageName, userID]
+    );
+
+    // check if any rows were affected by the update
+    if (queryExuectionResponse.affectedRows === 0) {
+      return {
+        success: false,
+        reason: "User not found",
+      };
+    }
+
+    return {
+      success: true,
+      reason: "Profile pic updated successfully",
+    };
+  } catch (error) {
+    console.log("profile_pic_as_client UPDATE error = ", error);
+    return {
+      success: false,
+      reason:
+        "Failed to update profile pic due to some error in executing the query",
+    };
+  }
+}
 
 // define a POST route to handle file uploads
 router.post(
@@ -78,7 +118,7 @@ router.post(
       next();
     });
   },
-  (req, res) => {
+  async (req, res) => {
     try {
       // send error msg if there was no file attached in the request
       if (!req.file) {
@@ -86,9 +126,20 @@ router.post(
         return res.status(400).send("No file uploaded");
       }
 
-      // TODO: UPDATE freelancer profile image link colomn on database
+      // UPDATE profile_pic_as_client colomn in database
       const imageName = `${req.file.filename}`; //FIXME: give custom name to uploaded file
-      res.send(imageName);
+      const userID = req.params.idusers;
+      const result = await updateProfilePicAsFreelancerColoumnInDatabase(
+        imageName,
+        userID
+      );
+
+      // send response to frontend on success
+      if (result.success) return res.send(imageName);
+
+      // could not UPDATE the database so handle the situation
+      // send response to frontend on failure
+      res.status(500).json({ error: "could not update the database!" });
     } catch (error) {
       // console.error("Failed to upload avatar:", error);
       console.log("Failed to upload avatar:", error);
