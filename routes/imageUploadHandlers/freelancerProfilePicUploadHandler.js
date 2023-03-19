@@ -2,6 +2,7 @@ const express = require("express");
 const multer = require("multer");
 const auth = require("../../middlewares/auth");
 const makeQueryToDatabase = require("../../src/queryDB");
+const fs = require("fs");
 
 const router = express.Router();
 
@@ -72,6 +73,59 @@ async function updateProfilePicAsFreelancerColoumnInDatabase(
   }
 }
 
+// define function to DELETE privious client profile pic image file from server
+async function deletePreviousFreelancerProfilePic(previousProfilePicName) {
+  try {
+    // logic to delete previous client profile pic
+    const pathToPrevProfilePic = `./public/uploads/freelancerProfileImages/${previousProfilePicName}`;
+    // const pathToPrevProfilePic = `/public/uploads/clientProfileImages/${previousProfilePicName}`;
+
+    // Check if the file exists
+    await fs.promises.access(pathToPrevProfilePic);
+
+    // If it exists, delete it
+    await fs.promises.unlink(pathToPrevProfilePic);
+
+    // If successful, return success flag with a message
+    return {
+      success: true,
+      message: "Previous profile picture deleted successfully.",
+    };
+  } catch (error) {
+    // If there is an error, return failure flag with an error message
+    console.log(
+      "error in deleting previouse client profile pic: ",
+      error.message
+    );
+    return {
+      success: false,
+      message: `Failed to delete previous profile picture: ${error.message}`,
+    };
+  }
+}
+
+// define function to get previouse client profile pic name
+async function getPreviousFreelancerProfilePicName(userID) {
+  const selectStatement =
+    "SELECT profile_pic_as_freelancer FROM " +
+    process.env.MYSQL_DB_NAME +
+    ".users WHERE idusers = ?;";
+  try {
+    const queryExuectionResponse = await makeQueryToDatabase(
+      process.env.MYSQL_DB_NAME,
+      selectStatement,
+      [userID]
+    );
+    return queryExuectionResponse[0][0].profile_pic_as_freelancer;
+  } catch (error) {
+    console.log(
+      "Error occured while trying to get previous profile_pic_as_client : ",
+      error
+    );
+    return false;
+  }
+}
+
 // define a POST route to handle file uploads
 router.post(
   "/:idusers",
@@ -126,13 +180,27 @@ router.post(
         return res.status(400).send("No file uploaded");
       }
 
-      // UPDATE profile_pic_as_client colomn in database
+      // UPDATE profile_pic_as_freelancer colomn in database and delete previous client profile pic
       const imageName = `${req.file.filename}`; //FIXME: give custom name to uploaded file
       const userID = req.params.idusers;
+      const previousProfilePicName = await getPreviousFreelancerProfilePicName(
+        userID
+      );
+
       const result = await updateProfilePicAsFreelancerColoumnInDatabase(
         imageName,
         userID
       );
+
+      // don't attepmt to delete previous profile pic if previousProfilePicName is not available
+      if (previousProfilePicName != false || previousProfilePicName != "") {
+        const deleteResponse = await deletePreviousFreelancerProfilePic(
+          previousProfilePicName
+        );
+        // if could not delete the previous file
+        if (!deleteResponse.success)
+          console.log("Could not delete previous freelancer profile pic");
+      }
 
       // send response to frontend on success
       if (result.success) return res.send(imageName);
@@ -142,8 +210,8 @@ router.post(
       res.status(500).json({ error: "could not update the database!" });
     } catch (error) {
       // console.error("Failed to upload avatar:", error);
-      console.log("Failed to upload avatar:", error);
-      res.status(500).send("Failed to upload avatar");
+      console.log("Failed to upload freelancer avatar:", error);
+      res.status(500).send("Failed to upload freelancer avatar");
     }
   }
 );
