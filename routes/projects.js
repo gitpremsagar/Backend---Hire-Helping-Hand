@@ -27,14 +27,14 @@ router.get("/", async (req, res) => {
   const sql =
     "SELECT * FROM `" +
     process.env.MYSQL_DB_NAME +
-    "`.projects WHERE category=? AND sub_category=?";
+    "`.projects WHERE category LIKE ? OR sub_category LIKE ?";
 
   // execute query
   try {
     const sqlResponse = await makeQueryToDatabase(
       process.env.MYSQL_DB_NAME,
       sql,
-      [category, sub_category]
+      [`%${category}%`, `%${sub_category}%`]
     );
 
     // send response
