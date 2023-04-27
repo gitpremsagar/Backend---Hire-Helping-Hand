@@ -17,7 +17,7 @@ router.get("/", async (req, res) => {
   const sql =
     "SELECT * FROM `" +
     process.env.MYSQL_DB_NAME +
-    "`.proposals WHERE category LIKE ? OR sub_category LIKE ?";
+    "`.proposals WHERE top_level_category LIKE ? OR mid_level_category LIKE ?";
 
   // execute query
   try {
@@ -35,6 +35,12 @@ router.get("/", async (req, res) => {
       .send(500)
       .json({ message: "there is some problem in executing the query" });
   }
+});
+
+//  FIXME: authenticate user before uploading the proposal
+router.post("/", (req, res) => {
+  console.log("request body on api/proposals = ", req.body);
+  res.send("working");
 });
 
 module.exports = router;

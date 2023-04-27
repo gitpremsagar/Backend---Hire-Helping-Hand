@@ -13,6 +13,7 @@ const proposals = require("./routes/proposals.js");
 const projects = require("./routes/projects.js");
 const freelacerProfilePicUploadHandler = require("./routes/imageUploadHandlers/freelancerProfilePicUploadHandler.js");
 const clientProfilePicUploadHandler = require("./routes/imageUploadHandlers/clientProfilePicUploadHandler");
+const proposalImageUploadHandler = require("./routes/imageUploadHandlers/proposalImagesUploadHandler.js");
 
 const app = express();
 
@@ -31,8 +32,13 @@ app.use("/api/search/proposals", handleSearchForProposals);
 app.use("/api/search/projects", handleSearchForProjects);
 app.use("/api/proposals", proposals);
 app.use("/api/projects", projects);
+
+// profile picture related
 app.use("/api/upload-avatar/freelancer", freelacerProfilePicUploadHandler);
 app.use("/api/upload-avatar/client", clientProfilePicUploadHandler);
+
+// proposal images related
+app.use("/api/uploads/proposalImages", proposalImageUploadHandler);
 
 //listening
 const portNumberOnLocalHost = process.env.LISTENING_PORT_OF_HHH_BACKEND_SERVER;
