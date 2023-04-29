@@ -14,6 +14,7 @@ const projects = require("./routes/projects.js");
 const freelacerProfilePicUploadHandler = require("./routes/imageUploadHandlers/freelancerProfilePicUploadHandler.js");
 const clientProfilePicUploadHandler = require("./routes/imageUploadHandlers/clientProfilePicUploadHandler");
 const proposalImageUploadHandler = require("./routes/imageUploadHandlers/proposalImagesUploadHandler.js");
+const topLevelCategoriesHandler = require("./routes/allCategoriesHandlers/topLevelCatgoriesHandler.js");
 
 const app = express();
 
@@ -32,6 +33,9 @@ app.use("/api/search/proposals", handleSearchForProposals);
 app.use("/api/search/projects", handleSearchForProjects);
 app.use("/api/proposals", proposals);
 app.use("/api/projects", projects);
+
+// all categories related
+app.use("/api/top-level-categories", topLevelCategoriesHandler);
 
 // profile picture related
 app.use("/api/upload-avatar/freelancer", freelacerProfilePicUploadHandler);
