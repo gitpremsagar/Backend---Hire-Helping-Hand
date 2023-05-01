@@ -42,6 +42,14 @@ router.get("/", async (req, res) => {
 //  FIXME: authenticate user before uploading the proposal
 // POST-> /api/proposal ==== To CREATE New Proposal
 router.post("/", auth, async (req, res) => {
+  const getTagsString = (tagsArray) => {
+    let tagsString = "";
+    tagsArray.map((tag, i) => {
+      tagsString = tagsString.length > 1 ? tagsString + ", " + tag : tag;
+    });
+    return tagsString;
+  };
+
   try {
     const sql = `INSERT INTO proposals (
       title, 
@@ -61,7 +69,11 @@ router.post("/", auth, async (req, res) => {
       freelancer_location, 
       heroImageName,
       mode
-      ) VALUES (?, ?, ?, ?,?,?,now(),now(), ${req.user.idusers},?, ?, ?, ?, ?, ?, ?, ?);`;
+      ) VALUES (?, ?, 
+        (SELECT name from top_level_categories WHERE id = ?), 
+        (SELECT name from mid_level_categories WHERE id = ?),
+        (SELECT name from bottom_level_categories WHERE id = ?),
+        ?,now(),now(), ${req.user.idusers},?, ?, ?, ?, ?, ?, ?, ?);`;
     const params = [
       req.body.proposal.proposalTitle,
       req.body.proposal.proposalDescription,
@@ -71,7 +83,7 @@ router.post("/", auth, async (req, res) => {
       req.body.proposal.proposalCost,
       req.body.proposal.extraImagesName,
       req.body.proposal.faqs,
-      req.body.proposal.tags,
+      getTagsString(req.body.proposal.tags),
       req.body.proposal.requirements,
       req.body.proposal.proposalDeliveryDuration,
       req.user.idusers,
