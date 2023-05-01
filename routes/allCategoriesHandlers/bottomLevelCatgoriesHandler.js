@@ -4,7 +4,16 @@ const router = express.Router();
 const makeQueryToDatabase = require("../../src/queryDB");
 
 // GET all topLevelCategories via /api/topLevelCategories
-router.get("/", (req, res) => {});
+router.get("/", async (req, res) => {
+  try {
+    const sql = `SELECT * FROM bottom_level_categories;`;
+    const [rows] = await makeQueryToDatabase(process.env.MYSQL_DB_NAME, sql);
+    res.send(rows);
+  } catch (error) {
+    console.log(error);
+    res.status(500);
+  }
+});
 
 // GET a topLevelCategory by ID via /api/topLevelCategories/:id
 router.get("/:id", (req, res) => {});

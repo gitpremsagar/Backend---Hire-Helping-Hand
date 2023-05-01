@@ -2,6 +2,7 @@ require("dotenv").config();
 const express = require("express");
 const router = express.Router();
 const makeQueryToDatabase = require("../src/queryDB");
+const auth = require("../middlewares/auth");
 
 // GET-> /api/proposal  ==== To Get All Proposals
 router.get("/", async (req, res) => {
@@ -40,8 +41,7 @@ router.get("/", async (req, res) => {
 
 //  FIXME: authenticate user before uploading the proposal
 // POST-> /api/proposal ==== To CREATE New Proposal
-router.post("/", (req, res) => {
-  // console.log("request body on api/proposals = ", req.body);
+router.post("/", auth, async (req, res) => {
   try {
     const sql = `INSERT INTO proposals (
       title, 
@@ -59,13 +59,39 @@ router.post("/", (req, res) => {
       requirements_detail, 
       delivery_duration, 
       freelancer_location, 
-      mode, 
-      heroImageName
-      ) VALUES ('tir', 'des', 'gjgjh', 'jhkjk', '32', '7657657', '78969868', '24', '{\"link1\": \"https://example.com/thumbnail1.jpg\"}', '{\"Question1\": \"Answer1\", \"Question2\": \"Answer2\"}', 'hrtyty,yutyu', '{\"Requirement1\": \"Detail1\", \"Requirement2\": \"Detail2\"}', '43', 'india', 'ssdfg', 'draft', 'some');`;
+      heroImageName,
+      mode
+      ) VALUES (?, ?, ?, ?,?,?,now(),now(), ${req.user.idusers},?, ?, ?, ?, ?, ?, ?, ?);`;
+    const params = [
+      req.body.proposal.proposalTitle,
+      req.body.proposal.proposalDescription,
+      req.body.proposal.topLevelCategoryID,
+      req.body.proposal.midLevelCategoryID,
+      req.body.proposal.bottomLevelCategoryID,
+      req.body.proposal.proposalCost,
+      req.body.proposal.extraImagesName,
+      req.body.proposal.faqs,
+      req.body.proposal.tags,
+      req.body.proposal.requirements,
+      req.body.proposal.proposalDeliveryDuration,
+      req.user.idusers,
+      req.body.proposal.heroImageName,
+      req.body.proposalMode,
+    ];
+    const [result] = await makeQueryToDatabase(
+      process.env.MYSQL_DB_NAME,
+      sql,
+      params
+    );
+    console.log(result);
+    if (result.affectedRows > 0) {
+      res.json({ inserted: true, lastInsertID: result.insertId });
+      // console.log(result);
+    }
   } catch (error) {
     console.log(error);
+    res.status(500);
   }
-  res.send("Create Proposal working...");
 });
 
 // POST-> /api/proposal/:id ==== To UPDATE a proposal by id
