@@ -43,7 +43,7 @@ router.get("/", async (req, res) => {
   } catch (error) {
     console.log("Error in running query = ", error);
     res
-      .send(500)
+      .status(500)
       .json({ message: "there is some problem in executing the query" });
   }
 });

@@ -73,7 +73,11 @@ router.post("/", auth, async (req, res) => {
         (SELECT name from top_level_categories WHERE id = ?), 
         (SELECT name from mid_level_categories WHERE id = ?),
         (SELECT name from bottom_level_categories WHERE id = ?),
-        ?,now(),now(), ${req.user.idusers},?, ?, ?, ?, ?, ?, ?, ?);`;
+        ?,
+        now(),
+        now(), 
+        ${req.user.idusers},
+        ?, ?, ?, ?, ?, ?, ?, ?);`;
     const params = [
       req.body.proposal.proposalTitle,
       req.body.proposal.proposalDescription,
