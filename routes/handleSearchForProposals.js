@@ -14,7 +14,7 @@ router.get("/", async (req, res) => {
   const searchServiceType = req.query.searchServiceType || "";
 
   // Build SQL query to search for proposals
-  let sql = `SELECT * FROM ${process.env.MYSQL_DB_NAME}.proposals WHERE title LIKE ? OR tags LIKE ? OR description LIKE ?  OR sub_category LIKE ? OR freelancer_location LIKE ?`;
+  let sql = `SELECT * FROM ${process.env.MYSQL_DB_NAME}.proposals WHERE title LIKE ? OR tags LIKE ? OR description LIKE ?  OR bottom_level_category LIKE ? OR freelancer_location LIKE ?`;
   let params = [];
   params.push(`%${q}%`, `%${q}%`, `%${q}%`, `%${q}%`, `%${q}%`);
 
@@ -115,7 +115,7 @@ router.get("/suggestions", async (req, res) => {
   const searchServiceType = req.query.searchServiceType || "";
 
   // Build SQL query to search for proposals
-  let sql = `SELECT * FROM ${process.env.MYSQL_DB_NAME}.proposals WHERE title LIKE ? OR tags LIKE ? OR description LIKE ?  OR sub_category LIKE ? OR freelancer_location LIKE ?`;
+  let sql = `SELECT * FROM ${process.env.MYSQL_DB_NAME}.proposals WHERE title LIKE ? OR tags LIKE ? OR description LIKE ?  OR bottom_level_category LIKE ? OR freelancer_location LIKE ?`;
   let params = [];
   params.push(`%${q}%`, `%${q}%`, `%${q}%`, `%${q}%`, `%${q}%`);
 
