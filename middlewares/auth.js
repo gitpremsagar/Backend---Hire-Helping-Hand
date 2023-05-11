@@ -10,6 +10,8 @@ module.exports = function (req, res, next) {
     next();
   }
 
+  // console.log("token = ", token);
+
   try {
     // decode the jwt token
     const decodedValidToken = jwt.verify(token, process.env.JWT_PRIVATE_KEY);

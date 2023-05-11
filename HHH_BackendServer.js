@@ -17,6 +17,9 @@ const proposalImageUploadHandler = require("./routes/imageUploadHandlers/proposa
 const topLevelCategoriesHandler = require("./routes/allCategoriesHandlers/topLevelCatgoriesHandler.js");
 const midLevelCategoriesHandler = require("./routes/allCategoriesHandlers/midLevelCatgoriesHandler.js");
 const bottomLevelCategoriesHandler = require("./routes/allCategoriesHandlers/bottomLevelCatgoriesHandler.js");
+const removeOfflinePeopleFromOnlineUsersTable = require("./src/modules/cronJobs.js");
+const chatContactsHandler = require("./routes/chat/chatContacts.js");
+const chatMessagesHandler = require("./routes/chat/chatMessagesHandler.js");
 
 const app = express();
 
@@ -45,8 +48,22 @@ app.use("/api/bottom-level-categories", bottomLevelCategoriesHandler);
 app.use("/api/upload-avatar/freelancer", freelacerProfilePicUploadHandler);
 app.use("/api/upload-avatar/client", clientProfilePicUploadHandler);
 
+// chat related
+app.use("/api/chat-contacts", chatContactsHandler);
+app.use("/api/chat-messages", chatMessagesHandler);
+
 // proposal images related
 app.use("/api/uploads/proposalImages", proposalImageUploadHandler);
+
+// this function triggers in every 2 minutes to perform server side routine works
+const interval = 1000 * process.env.CRON_JOBS_INTERVAL;
+function runEverySecond() {
+  setTimeout(() => {
+    removeOfflinePeopleFromOnlineUsersTable();
+    runEverySecond();
+  }, interval);
+}
+runEverySecond();
 
 //listening
 const portNumberOnLocalHost = process.env.LISTENING_PORT_OF_HHH_BACKEND_SERVER;
