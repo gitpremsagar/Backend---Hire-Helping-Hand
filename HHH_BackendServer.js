@@ -56,6 +56,7 @@ app.use("/api/chat-messages", chatMessagesHandler);
 app.use("/api/uploads/proposalImages", proposalImageUploadHandler);
 
 // this function triggers in every 2 minutes to perform server side routine works
+// FIXME: Remove the following cron job function
 const interval = 1000 * process.env.CRON_JOBS_INTERVAL;
 function runEverySecond() {
   setTimeout(() => {

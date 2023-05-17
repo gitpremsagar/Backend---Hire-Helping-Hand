@@ -7,7 +7,7 @@ const router = express.Router();
 // route handler to get all chat contacts of authorised user
 router.get("/", auth, async (req, res) => {
   // dont allow user to access contacts if no or invalid token is provided
-  console.log(req.user);
+  // console.log(req.user);
   if (req.user === "invalidToken" || req.user === "notLoggedIn")
     return res.status(400).json({ error: "invalid or no token provided" });
 
