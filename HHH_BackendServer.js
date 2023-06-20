@@ -20,6 +20,7 @@ const bottomLevelCategoriesHandler = require("./routes/allCategoriesHandlers/bot
 const removeOfflinePeopleFromOnlineUsersTable = require("./src/modules/cronJobs.js");
 const chatContactsHandler = require("./routes/chat/chatContacts.js");
 const chatMessagesHandler = require("./routes/chat/chatMessagesHandler.js");
+const attachmentUploadHandler = require("./routes/projectAttachmentUploadHandlers/attachmentUploadHandler.js");
 
 const app = express();
 
@@ -54,6 +55,9 @@ app.use("/api/chat-messages", chatMessagesHandler);
 
 // proposal images related
 app.use("/api/uploads/proposalImages", proposalImageUploadHandler);
+
+// projects related
+app.use("/api/upload/project-attachments", attachmentUploadHandler);
 
 // this function triggers in every 2 minutes to perform server side routine works
 // FIXME: Remove the following cron job function
