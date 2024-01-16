@@ -4,7 +4,7 @@ const router = express.Router();
 const makeQueryToDatabase = require("../src/queryDB");
 const auth = require("../middlewares/auth");
 
-// GET-> /api/proposal  ==== To Get All Proposals
+// GET-> /api/favourite/proposal  ==== To Get All Proposals
 router.get("/", async (req, res) => {
   // extracting category and sub_category from url
   const { category, sub_category } = req.query;
@@ -101,9 +101,8 @@ router.post("/", auth, async (req, res) => {
     );
     console.log(result);
     if (result.affectedRows > 0) {
-      // return the inserted proposal's ID
       res.json({ inserted: true, lastInsertID: result.insertId });
-      console.log(result);
+      // console.log(result);
     }
   } catch (error) {
     console.log(error);
@@ -111,17 +110,10 @@ router.post("/", auth, async (req, res) => {
   }
 });
 
-// GET-> /api/proposal/:id ==== To GET a proposal by id
-router.get("/:id", auth, async (req, res) => {
-  console.log("request body on api/proposals = ", req.body);
-  res.send("working");
-});
-
 // POST-> /api/proposal/:id ==== To UPDATE a proposal by id
 router.put("/:id", (req, res) => {
-  // FIXME: Allow user to update only their own proposal by cross checking that if this proposalID's creator is this user himself or not
   console.log("request body on api/proposals = ", req.body);
-  res.send(req.body);
+  res.send("working");
 });
 
 // POST-> /api/proposal ==== To DELETE a Proposal by ID
