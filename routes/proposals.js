@@ -4,6 +4,14 @@ const router = express.Router();
 const makeQueryToDatabase = require("../src/queryDB");
 const auth = require("../middlewares/auth");
 
+const getTagsString = (tagsArray) => {
+  let tagsString = "";
+  tagsArray.map((tag, i) => {
+    tagsString = tagsString.length > 1 ? tagsString + ", " + tag : tag;
+  });
+  return tagsString;
+};
+
 // GET-> /api/proposal  ==== To Get All Proposals
 router.get("/", async (req, res) => {
   // extracting category and sub_category from url
@@ -42,13 +50,13 @@ router.get("/", async (req, res) => {
 //  FIXME: authenticate user before uploading the proposal
 // POST-> /api/proposal ==== To CREATE New Proposal
 router.post("/", auth, async (req, res) => {
-  const getTagsString = (tagsArray) => {
-    let tagsString = "";
-    tagsArray.map((tag, i) => {
-      tagsString = tagsString.length > 1 ? tagsString + ", " + tag : tag;
-    });
-    return tagsString;
-  };
+  // const getTagsString = (tagsArray) => {
+  //   let tagsString = "";
+  //   tagsArray.map((tag, i) => {
+  //     tagsString = tagsString.length > 1 ? tagsString + ", " + tag : tag;
+  //   });
+  //   return tagsString;
+  // };
 
   try {
     const sql = `INSERT INTO proposals (
@@ -77,7 +85,9 @@ router.post("/", auth, async (req, res) => {
         now(),
         now(), 
         ${req.user.idusers},
-        ?, ?, ?, ?, ?, ?, ?, ?);`;
+        ?, ?, ?, ?, ?, 
+        (SELECT user_country FROM users WHERE idusers=?), 
+        ?, ?);`;
     const params = [
       req.body.proposal.proposalTitle,
       req.body.proposal.proposalDescription,
@@ -90,7 +100,7 @@ router.post("/", auth, async (req, res) => {
       getTagsString(req.body.proposal.tags),
       req.body.proposal.requirements,
       req.body.proposal.proposalDeliveryDuration,
-      req.user.idusers,
+      req.user.idusers, //FIXME: provide freelancer's location
       req.body.proposal.heroImageName,
       req.body.proposalMode,
     ];
@@ -118,10 +128,58 @@ router.get("/:id", auth, async (req, res) => {
 });
 
 // POST-> /api/proposal/:id ==== To UPDATE a proposal by id
-router.put("/:id", (req, res) => {
+router.put("/:id", async (req, res) => {
   // FIXME: Allow user to update only their own proposal by cross checking that if this proposalID's creator is this user himself or not
-  console.log("request body on api/proposals = ", req.body);
-  res.send(req.body);
+  console.log("Update request body on api/proposals = ", req.body);
+  try {
+    const sql = `UPDATE proposals SET
+      title=?,
+      description=?,
+      top_level_category=(SELECT name from top_level_categories WHERE id = ?),
+      mid_level_category=(SELECT name from mid_level_categories WHERE id = ?),
+      bottom_level_category=(SELECT name from bottom_level_categories WHERE id = ?),
+      price_basic=?,
+      updated_at=NOW(),
+      thumbnail_links=?,
+      faqs=?,
+      tags=?,
+      requirements_detail=?,
+      delivery_duration=?,
+      heroImageName=?,
+      mode=?
+      WHERE
+      proposal_id = ?;`;
+    const params = [
+      req.body.proposal.proposalTitle,
+      req.body.proposal.proposalDescription,
+      req.body.proposal.topLevelCategoryID,
+      req.body.proposal.midLevelCategoryID,
+      req.body.proposal.bottomLevelCategoryID,
+      req.body.proposal.proposalCost,
+      req.body.proposal.extraImagesName,
+      req.body.proposal.faqs,
+      getTagsString(req.body.proposal.tags),
+      req.body.proposal.requirements,
+      req.body.proposal.proposalDeliveryDuration,
+      req.body.proposal.heroImageName,
+      req.body.proposalMode,
+      req.body.proposal.proposalID,
+    ];
+    const [result] = await makeQueryToDatabase(
+      process.env.MYSQL_DB_NAME,
+      sql,
+      params
+    );
+    console.log(result);
+    if (result.affectedRows > 0) {
+      // return the inserted proposal's ID
+      res.json({ updated: true });
+      console.log("Update proposal result = ", result);
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(500);
+  }
 });
 
 // POST-> /api/proposal ==== To DELETE a Proposal by ID
