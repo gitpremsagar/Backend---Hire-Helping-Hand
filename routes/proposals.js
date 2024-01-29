@@ -48,7 +48,7 @@ router.get("/", async (req, res) => {
 });
 
 //  FIXME: authenticate user before uploading the proposal
-// POST-> /api/proposal ==== To CREATE New Proposal
+// POST-> /api/proposals ==== To CREATE New Proposal
 router.post("/", auth, async (req, res) => {
   // const getTagsString = (tagsArray) => {
   //   let tagsString = "";
@@ -121,10 +121,28 @@ router.post("/", auth, async (req, res) => {
   }
 });
 
-// GET-> /api/proposal/:id ==== To GET a proposal by id
+// GET-> /api/proposals/:id ==== To GET a proposal by id
 router.get("/:id", auth, async (req, res) => {
   console.log("request body on api/proposals = ", req.body);
   res.send("working");
+});
+
+// GET-> /api/proposals/freelancer/:freelancerID ==== To GET a all proposals by freelancer's id
+router.get("/freelancer/:freelancerID", async (req, res) => {
+  try {
+    const sql = `SELECT * FROM proposals WHERE freelancer_id = ?`;
+    const params = [req.params.freelancerID];
+    const [result] = await makeQueryToDatabase(
+      process.env.MYSQL_DB_NAME,
+      sql,
+      params
+    );
+    console.log("GET result for proposals by freelancer's id = ", result);
+    res.send(result);
+  } catch (error) {
+    console.log(error);
+    res.status(500);
+  }
 });
 
 // POST-> /api/proposal/:id ==== To UPDATE a proposal by id
@@ -182,7 +200,7 @@ router.put("/:id", async (req, res) => {
   }
 });
 
-// POST-> /api/proposal ==== To DELETE a Proposal by ID
+// POST-> /api/proposals ==== To DELETE a Proposal by ID
 router.delete("/:id", (req, res) => {
   console.log("request body on api/proposals = ", req.body);
   res.send("working");
