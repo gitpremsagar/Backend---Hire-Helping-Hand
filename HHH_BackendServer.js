@@ -21,6 +21,9 @@ const removeOfflinePeopleFromOnlineUsersTable = require("./src/modules/cronJobs.
 const chatContactsHandler = require("./routes/chat/chatContacts.js");
 const chatMessagesHandler = require("./routes/chat/chatMessagesHandler.js");
 const attachmentUploadHandler = require("./routes/projectAttachmentUploadHandlers/attachmentUploadHandler.js");
+const activeProposalByFreelancerHandler = require("./routes/proposals/byFreelancerID/active.js");
+const pausedProposalByFreelancerHandler = require("./routes/proposals/byFreelancerID/paused.js");
+const draftProposalByFreelancerHandler = require("./routes/proposals/byFreelancerID/drafts.js");
 
 const app = express();
 
@@ -37,8 +40,14 @@ app.use("/api/authenticate", decodeToken);
 app.use("/api/verify/email", verifyEmail);
 app.use("/api/search/proposals", handleSearchForProposals);
 app.use("/api/search/projects", handleSearchForProjects);
-app.use("/api/proposals", proposals);
 app.use("/api/projects", projects);
+
+//proposal related
+app.use("/api/proposals", proposals);
+//proposals by freelancer
+app.use("/api/proposals/freelancer/active", activeProposalByFreelancerHandler);
+app.use("/api/proposals/freelancer/paused", pausedProposalByFreelancerHandler);
+app.use("/api/proposals/freelancer/draft", draftProposalByFreelancerHandler);
 
 // all categories related
 app.use("/api/top-level-categories", topLevelCategoriesHandler);
