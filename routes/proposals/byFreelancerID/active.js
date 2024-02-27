@@ -17,7 +17,7 @@ const getTagsString = (tagsArray) => {
 // ============================= READ ALL =================================
 
 // GET-> /api/proposals/freelancer/active/:freelancerID ==== To GET a all active proposals by freelancer's id
-router.get("/:freelancerID", async (req, res) => {
+router.get("/all/:freelancerID", async (req, res) => {
   try {
     const sql = `SELECT * FROM proposals WHERE freelancer_id = ? AND mode="published"`;
     const params = [req.params.freelancerID];
