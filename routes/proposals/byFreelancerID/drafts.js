@@ -26,7 +26,7 @@ router.get("/all/:freelancerID", async (req, res) => {
       sql,
       params
     );
-    console.log("GET result for proposals by freelancer's id = ", result);
+    console.log("GET result for draft proposals by freelancer's id = ", result);
     res.send(result);
   } catch (error) {
     console.log(error);

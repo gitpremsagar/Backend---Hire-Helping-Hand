@@ -27,7 +27,7 @@ router.get("/all/:freelancerID", async (req, res) => {
       params
     );
     console.log(
-      "GET result for active proposals by freelancer's id = ",
+      "GET result for published proposals by freelancer's id = ",
       result
     );
     res.send(result);

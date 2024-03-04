@@ -49,6 +49,12 @@ app.use("/api/proposals/freelancer/active", activeProposalByFreelancerHandler);
 app.use("/api/proposals/freelancer/paused", pausedProposalByFreelancerHandler);
 app.use("/api/proposals/freelancer/draft", draftProposalByFreelancerHandler);
 
+// ongoing projects related
+app.use(
+  "/api/ongoing-projects",
+  require("./routes/ongoingProjects/ongoingProjects.js")
+);
+
 // all categories related
 app.use("/api/top-level-categories", topLevelCategoriesHandler);
 app.use("/api/mid-level-categories", midLevelCategoriesHandler);
