@@ -152,24 +152,6 @@ router.get("/:id", auth, async (req, res) => {
   }
 });
 
-// GET-> /api/proposals/freelancer/:freelancerID ==== To GET a all proposals by freelancer's id
-router.get("/all/:freelancerID", async (req, res) => {
-  try {
-    const sql = `SELECT * FROM proposals WHERE freelancer_id = ?`;
-    const params = [req.params.freelancerID];
-    const [result] = await makeQueryToDatabase(
-      process.env.MYSQL_DB_NAME,
-      sql,
-      params
-    );
-    console.log("GET result for proposals by freelancer's id = ", result);
-    res.send(result);
-  } catch (error) {
-    console.log(error);
-    res.status(500);
-  }
-});
-
 // GET-> /api/proposals/active/:freelancerID ==== To GET a all active proposals by freelancer's id
 router.get("/active/:freelancerID", async (req, res) => {
   try {
