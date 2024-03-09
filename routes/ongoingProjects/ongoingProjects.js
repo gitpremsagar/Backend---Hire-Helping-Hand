@@ -33,7 +33,7 @@ router.get("/freelancer/:freelancer_id", auth, async (req, res) => {
   }
 
   try {
-    const sql = "SELECT * FROM ongoing_projects WHERE freelancer_id = ?";
+    const sql = "SELECT * FROM orders WHERE freelancer_id = ?";
     const params = [req.params.freelancer_id];
     const [result] = await makeQueryToDatabase(
       process.env.MYSQL_DB_NAME,
