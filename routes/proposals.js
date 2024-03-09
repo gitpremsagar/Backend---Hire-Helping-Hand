@@ -125,17 +125,17 @@ router.post("/", auth, async (req, res) => {
 router.get("/:id", auth, async (req, res) => {
   try {
     // check if the user is the owner of the proposal
-    const sqlToCrossCheck = `SELECT proposal_id FROM proposals WHERE proposal_id = ? AND freelancer_id = ?`;
-    const paramsToCrossCheck = [req.params.id, req.user.idusers];
-    const [resultToCrossCheck] = await makeQueryToDatabase(
-      process.env.MYSQL_DB_NAME,
-      sqlToCrossCheck,
-      paramsToCrossCheck
-    );
-    if (resultToCrossCheck.length === 0) {
-      // console.log("unauthorized access attempt");
-      return res.status(401).json({ message: "unauthorized access" });
-    }
+    // const sqlToCrossCheck = `SELECT proposal_id FROM proposals WHERE proposal_id = ? AND freelancer_id = ?`;
+    // const paramsToCrossCheck = [req.params.id, req.user.idusers];
+    // const [resultToCrossCheck] = await makeQueryToDatabase(
+    //   process.env.MYSQL_DB_NAME,
+    //   sqlToCrossCheck,
+    //   paramsToCrossCheck
+    // );
+    // if (resultToCrossCheck.length === 0) {
+    //   // console.log("unauthorized access attempt");
+    //   return res.status(401).json({ message: "unauthorized access" });
+    // }
 
     const sql = `SELECT * FROM proposals WHERE proposal_id = ?`;
     const params = [req.params.id];
@@ -144,8 +144,8 @@ router.get("/:id", auth, async (req, res) => {
       sql,
       params
     );
-    console.log("GET result for proposal by id = ", result);
-    res.send(result);
+    // console.log("GET result for proposal by id = ", result);
+    res.send(result[0]);
   } catch (error) {
     console.log(error);
     res.status(500);
