@@ -1,10 +1,11 @@
 require("dotenv").config();
 const express = require("express");
 const makeQueryToDatabase = require("../../src/queryDB");
+const auth = require("../../middlewares/auth");
 
 const router = express.Router();
 
-// GET-> /api/ongoing-projects ==== To GET all ongoing projects
+// GET-> /api/on-going-projects ==== To GET all ongoing projects
 router.get("/", async (req, res) => {
   try {
     const sql = "SELECT * FROM ongoing_projects";
@@ -22,7 +23,35 @@ router.get("/", async (req, res) => {
   }
 });
 
-// GET-> /api/ongoing-projects/:projectID ==== To GET a specific ongoing project by projectID
+// GET-> /api/on-going-projects/freelancer/:freelancer_id ==== To GET all ongoing projects by freelancer_id
+router.get("/freelancer/:freelancer_id", auth, async (req, res) => {
+  // allow only freelancers to access their own on-going projects
+  // is freelancer_id in the token same as the one in the request?
+  // TODO: modify the following condition to allow admin to access all on-going projects
+  if (req.user.idusers != req.params.freelancer_id) {
+    return res.status(401).json({ message: "unauthorized access" });
+  }
+
+  try {
+    const sql = "SELECT * FROM ongoing_projects WHERE freelancer_id = ?";
+    const params = [req.params.freelancer_id];
+    const [result] = await makeQueryToDatabase(
+      process.env.MYSQL_DB_NAME,
+      sql,
+      params
+    );
+    // console.log(
+    //   "GET result for all on-going projects by freelancer_id = ",
+    //   result
+    // );
+    res.send(result);
+  } catch (error) {
+    console.log(error);
+    res.status(500);
+  }
+});
+
+// GET-> /api/on-going-projects/:projectID ==== To GET a specific ongoing project by projectID
 router.get("/:projectID", async (req, res) => {
   try {
     const sql = "SELECT * FROM ongoing_projects WHERE project_id = ?";
@@ -40,7 +69,7 @@ router.get("/:projectID", async (req, res) => {
   }
 });
 
-// POST-> /api/ongoing-projects ==== To POST a new ongoing project
+// POST-> /api/on-going-projects ==== To POST a new ongoing project
 router.post("/", async (req, res) => {
   try {
     // sample sql statement
@@ -76,7 +105,7 @@ router.post("/", async (req, res) => {
   }
 });
 
-// PUT-> /api/ongoing-projects/:projectID ==== To UPDATE a specific ongoing project by projectID
+// PUT-> /api/on-going-projects/:projectID ==== To UPDATE a specific ongoing project by projectID
 router.put("/:projectID", async (req, res) => {
   try {
     const sql = `UPDATE ongoing_projects 
@@ -106,7 +135,7 @@ router.put("/:projectID", async (req, res) => {
   }
 });
 
-// DELETE-> /api/ongoing-projects/:projectID ==== To DELETE a specific ongoing project by projectID
+// DELETE-> /api/on-going-projects/:projectID ==== To DELETE a specific ongoing project by projectID
 router.delete("/:projectID", async (req, res) => {
   try {
     const sql = "DELETE FROM ongoing_projects WHERE project_id = ?";

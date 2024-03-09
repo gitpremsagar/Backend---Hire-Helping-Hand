@@ -16,7 +16,7 @@ const getTagsString = (tagsArray) => {
 //============================================ draft proposals by freelancerID ==============================================================
 //=====================================================================================================================================
 
-// GET-> /api/proposals/freelancer/:freelancerID ==== To GET a all proposals by freelancer's id
+// GET-> /api/proposals/freelancer/:freelancerID ==== To GET a all draft proposals by freelancer's id
 router.get("/all/:freelancerID", async (req, res) => {
   try {
     const sql = `SELECT * FROM proposals WHERE freelancer_id = ? AND mode='draft' `;

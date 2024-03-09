@@ -51,7 +51,7 @@ app.use("/api/proposals/freelancer/draft", draftProposalByFreelancerHandler);
 
 // ongoing projects related
 app.use(
-  "/api/ongoing-projects",
+  "/api/on-going-projects",
   require("./routes/ongoingProjects/ongoingProjects.js")
 );
 
