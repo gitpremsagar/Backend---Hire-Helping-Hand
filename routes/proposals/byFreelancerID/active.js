@@ -20,6 +20,7 @@ const getTagsString = (tagsArray) => {
 router.get("/all/:freelancerID", async (req, res) => {
   try {
     const sql = `SELECT * FROM proposals WHERE freelancer_id = ? AND mode="published"`;
+    // console.log("Freelancer Id = ", req.params.freelancerID);
     const params = [req.params.freelancerID];
     const [result] = await makeQueryToDatabase(
       process.env.MYSQL_DB_NAME,

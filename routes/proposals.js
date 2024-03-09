@@ -123,8 +123,33 @@ router.post("/", auth, async (req, res) => {
 
 // GET-> /api/proposals/:id ==== To GET a proposal by id
 router.get("/:id", auth, async (req, res) => {
-  console.log("request body on api/proposals = ", req.body);
-  res.send("working");
+  try {
+    // check if the user is the owner of the proposal
+    const sqlToCrossCheck = `SELECT proposal_id FROM proposals WHERE proposal_id = ? AND freelancer_id = ?`;
+    const paramsToCrossCheck = [req.params.id, req.user.idusers];
+    const [resultToCrossCheck] = await makeQueryToDatabase(
+      process.env.MYSQL_DB_NAME,
+      sqlToCrossCheck,
+      paramsToCrossCheck
+    );
+    if (resultToCrossCheck.length === 0) {
+      // console.log("unauthorized access attempt");
+      return res.status(401).json({ message: "unauthorized access" });
+    }
+
+    const sql = `SELECT * FROM proposals WHERE proposal_id = ?`;
+    const params = [req.params.id];
+    const [result] = await makeQueryToDatabase(
+      process.env.MYSQL_DB_NAME,
+      sql,
+      params
+    );
+    console.log("GET result for proposal by id = ", result);
+    res.send(result);
+  } catch (error) {
+    console.log(error);
+    res.status(500);
+  }
 });
 
 // GET-> /api/proposals/freelancer/:freelancerID ==== To GET a all proposals by freelancer's id
