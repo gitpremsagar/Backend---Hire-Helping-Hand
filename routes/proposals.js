@@ -50,13 +50,9 @@ router.get("/", async (req, res) => {
 //  FIXME: authenticate user before uploading the proposal
 // POST-> /api/proposals ==== To CREATE New Proposal
 router.post("/", auth, async (req, res) => {
-  // const getTagsString = (tagsArray) => {
-  //   let tagsString = "";
-  //   tagsArray.map((tag, i) => {
-  //     tagsString = tagsString.length > 1 ? tagsString + ", " + tag : tag;
-  //   });
-  //   return tagsString;
-  // };
+  //allow only logged in users with valid token to create a proposal
+  // if (req.user == "notLoggedIn" || req.user == "invalidToken")
+  //   return res.status(401).json({ message: "unauthorized access" });
 
   try {
     const sql = `INSERT INTO proposals (
