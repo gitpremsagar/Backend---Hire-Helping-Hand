@@ -152,66 +152,6 @@ router.get("/:id", auth, async (req, res) => {
   }
 });
 
-// GET-> /api/proposals/active/:freelancerID ==== To GET a all active proposals by freelancer's id
-router.get("/active/:freelancerID", async (req, res) => {
-  try {
-    const sql = `SELECT * FROM proposals WHERE freelancer_id = ? AND mode="published"`;
-    const params = [req.params.freelancerID];
-    const [result] = await makeQueryToDatabase(
-      process.env.MYSQL_DB_NAME,
-      sql,
-      params
-    );
-    console.log(
-      "GET result for active proposals by freelancer's id = ",
-      result
-    );
-    res.send(result);
-  } catch (error) {
-    console.log(error);
-    res.status(500);
-  }
-});
-
-// GET-> /api/proposals/paused/:freelancerID ==== To GET a all paused proposals by freelancer's id
-router.get("/paused/:freelancerID", async (req, res) => {
-  try {
-    const sql = `SELECT * FROM proposals WHERE freelancer_id = ? AND mode="paused"`;
-    const params = [req.params.freelancerID];
-    const [result] = await makeQueryToDatabase(
-      process.env.MYSQL_DB_NAME,
-      sql,
-      params
-    );
-    console.log(
-      "GET result for paused proposals by freelancer's id = ",
-      result
-    );
-    res.send(result);
-  } catch (error) {
-    console.log(error);
-    res.status(500);
-  }
-});
-
-// GET-> /api/proposals/draft/:freelancerID ==== To GET a all draft proposals by freelancer's id
-router.get("/draft/:freelancerID", async (req, res) => {
-  try {
-    const sql = `SELECT * FROM proposals WHERE freelancer_id = ? AND mode="draft"`;
-    const params = [req.params.freelancerID];
-    const [result] = await makeQueryToDatabase(
-      process.env.MYSQL_DB_NAME,
-      sql,
-      params
-    );
-    console.log("GET result for draft proposals by freelancer's id = ", result);
-    res.send(result);
-  } catch (error) {
-    console.log(error);
-    res.status(500);
-  }
-});
-
 // POST-> /api/proposal/:id ==== To UPDATE a proposal by id
 router.put("/:id", async (req, res) => {
   // FIXME: Allow user to update only their own proposal by cross checking that if this proposalID's creator is this user himself or not
@@ -271,6 +211,66 @@ router.put("/:id", async (req, res) => {
 router.delete("/:id", (req, res) => {
   console.log("request body on api/proposals = ", req.body);
   res.send("working");
+});
+
+// GET-> /api/proposals/active/:freelancerID ==== To GET a all active proposals by freelancer's id
+router.get("/active/:freelancerID", async (req, res) => {
+  try {
+    const sql = `SELECT * FROM proposals WHERE freelancer_id = ? AND mode="published"`;
+    const params = [req.params.freelancerID];
+    const [result] = await makeQueryToDatabase(
+      process.env.MYSQL_DB_NAME,
+      sql,
+      params
+    );
+    console.log(
+      "GET result for active proposals by freelancer's id = ",
+      result
+    );
+    res.send(result);
+  } catch (error) {
+    console.log(error);
+    res.status(500);
+  }
+});
+
+// GET-> /api/proposals/paused/:freelancerID ==== To GET a all paused proposals by freelancer's id
+router.get("/paused/:freelancerID", async (req, res) => {
+  try {
+    const sql = `SELECT * FROM proposals WHERE freelancer_id = ? AND mode="paused"`;
+    const params = [req.params.freelancerID];
+    const [result] = await makeQueryToDatabase(
+      process.env.MYSQL_DB_NAME,
+      sql,
+      params
+    );
+    console.log(
+      "GET result for paused proposals by freelancer's id = ",
+      result
+    );
+    res.send(result);
+  } catch (error) {
+    console.log(error);
+    res.status(500);
+  }
+});
+
+// GET-> /api/proposals/draft/:freelancerID ==== To GET a all draft proposals by freelancer's id
+router.get("/draft/:freelancerID", async (req, res) => {
+  try {
+    const sql = `SELECT * FROM proposals WHERE freelancer_id = ? AND mode="draft"`;
+    const params = [req.params.freelancerID];
+    const [result] = await makeQueryToDatabase(
+      process.env.MYSQL_DB_NAME,
+      sql,
+      params
+    );
+    console.log("GET result for draft proposals by freelancer's id = ", result);
+    res.send(result);
+  } catch (error) {
+    console.log(error);
+    res.status(500);
+  }
 });
 
 module.exports = router;
